@@ -1,0 +1,95 @@
+replicaCount: 1
+
+image:
+  repository: bartlomiejklimczak/smarthome-metrics
+  pullPolicy: IfNotPresent
+  tag: "" # Defaults to .Chart.AppVersion
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 10001
+  capabilities:
+    drop:
+      - ALL
+
+service:
+  type: ClusterIP
+  port: 8088
+
+database:
+  # Hostname or cluster service for external PostgreSQL
+  host: "postgres.default.svc.cluster.local"
+  port: 5432
+  name: "metrics"
+  user: "postgres"
+  password: "" # Plaintext password if not using existingSecret
+  sslmode: "disable"
+
+  # Name of an existing secret containing database credentials
+  existingSecret: ""
+  # Key inside existingSecret for password (used when database.existingSecret is set)
+  existingSecretPasswordKey: "postgresql-password"
+  # Optional key inside existingSecret that contains the complete DATABASE_URL
+  urlSecretKey: ""
+
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  initialDelaySeconds: 3
+  periodSeconds: 5
+  timeoutSeconds: 2
+  failureThreshold: 2
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 128Mi
+  requests:
+    cpu: 20m
+    memory: 32Mi
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: metrics.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

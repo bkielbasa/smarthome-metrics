@@ -1,0 +1,8 @@
+apiVersion: v2
+name: smarthome-metrics
+description: A lightweight Go service to ingest and persist smart home metrics into PostgreSQL
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+maintainers:
+  - name: bartlomiejklimczak
