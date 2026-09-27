@@ -36,6 +36,10 @@ securityContext:
 service:
   type: ClusterIP
   port: 8088
+  # nodePort: 30088       # Optional: used when type is NodePort
+  # loadBalancerIP: ""    # Optional: static IP if using MetalLB or cloud load balancer
+  # externalIPs: []       # Optional: e.g. ["192.168.1.29"]
+  annotations: {}         # e.g. metallb.universe.tf/loadBalancerIPs: "192.168.1.29"
 
 database:
   # Hostname or cluster service for external PostgreSQL
