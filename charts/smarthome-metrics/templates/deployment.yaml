@@ -41,6 +41,7 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ include "smarthome-metrics.fullname" . }}-config
+          {{- if or .Values.database.urlSecretKey .Values.database.existingSecret .Values.database.password }}
           env:
             {{- if .Values.database.urlSecretKey }}
             - name: DATABASE_URL
@@ -61,6 +62,7 @@ spec:
                   name: {{ include "smarthome-metrics.secretName" . }}
                   key: DB_PASSWORD
             {{- end }}
+          {{- end }}
           livenessProbe:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe:
