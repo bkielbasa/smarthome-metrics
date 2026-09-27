@@ -1,0 +1,8 @@
+.superpowers/
+bin/
+dist/
+*.exe
+*.test
+*.out
+.DS_Store
+.env
