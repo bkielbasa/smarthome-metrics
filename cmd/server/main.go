@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/bartlomiejklimczak/smarthome-metrics/internal/config"
 	"github.com/bartlomiejklimczak/smarthome-metrics/internal/db"
@@ -19,8 +20,15 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 
+	if err := run(); err != nil {
+		logger.Error("application fatal error", "error", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
 	cfg := config.Load()
-	logger.Info("starting smarthome-metrics server", "port", cfg.Port)
+	slog.Info("starting smarthome-metrics server", "port", cfg.Port)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -28,22 +36,25 @@ func main() {
 	dbURL := cfg.GetDatabaseURL()
 	store, err := db.NewPgxStore(ctx, dbURL)
 	if err != nil {
-		logger.Error("failed to connect to database", "error", err)
-		os.Exit(1)
+		return fmt.Errorf("failed to connect to database: %w", err)
 	}
 	defer store.Close()
-	logger.Info("connected to PostgreSQL and initialized schema")
+	slog.Info("connected to PostgreSQL and initialized schema")
 
 	router := server.NewRouter(store)
 
 	httpServer := &http.Server{
-		Addr:    fmt.Sprintf(":%s", cfg.Port),
-		Handler: router,
+		Addr:              fmt.Sprintf(":%s", cfg.Port),
+		Handler:           router,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       120 * time.Second,
 	}
 
 	serverErr := make(chan error, 1)
 	go func() {
-		logger.Info("listening for HTTP requests", "addr", httpServer.Addr)
+		slog.Info("listening for HTTP requests", "addr", httpServer.Addr)
 		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			serverErr <- err
 		}
@@ -51,19 +62,18 @@ func main() {
 
 	select {
 	case err := <-serverErr:
-		logger.Error("server encountered error", "error", err)
-		os.Exit(1)
+		return fmt.Errorf("http server error: %w", err)
 	case <-ctx.Done():
-		logger.Info("shutdown signal received, draining connections...")
+		slog.Info("shutdown signal received, draining connections...")
 	}
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.ShutdownTimeout)
 	defer cancel()
 
 	if err := httpServer.Shutdown(shutdownCtx); err != nil {
-		logger.Error("graceful shutdown failed", "error", err)
-		os.Exit(1)
+		return fmt.Errorf("graceful shutdown failed: %w", err)
 	}
 
-	logger.Info("server shut down successfully")
+	slog.Info("server shut down successfully")
+	return nil
 }

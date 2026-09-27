@@ -6,12 +6,17 @@ import (
 	"time"
 )
 
-func TestLoadConfig_Defaults(t *testing.T) {
-	// Clear relevant env vars
-	envKeys := []string{"PORT", "DATABASE_URL", "DB_HOST", "DB_PORT", "DB_USER", "DB_PASSWORD", "DB_NAME", "DB_SSLMODE", "SHUTDOWN_TIMEOUT"}
+var envKeys = []string{"PORT", "DATABASE_URL", "DB_HOST", "DB_PORT", "DB_USER", "DB_PASSWORD", "DB_NAME", "DB_SSLMODE", "SHUTDOWN_TIMEOUT"}
+
+func clearEnv(t *testing.T) {
+	t.Helper()
 	for _, k := range envKeys {
 		os.Unsetenv(k)
 	}
+}
+
+func TestLoadConfig_Defaults(t *testing.T) {
+	clearEnv(t)
 
 	cfg := Load()
 
@@ -44,14 +49,11 @@ func TestLoadConfig_Defaults(t *testing.T) {
 }
 
 func TestLoadConfig_CustomEnv(t *testing.T) {
+	clearEnv(t)
 	os.Setenv("PORT", "9090")
 	os.Setenv("DATABASE_URL", "postgres://custom:pass@remote:5433/customdb?sslmode=require")
 	os.Setenv("SHUTDOWN_TIMEOUT", "10s")
-	defer func() {
-		os.Unsetenv("PORT")
-		os.Unsetenv("DATABASE_URL")
-		os.Unsetenv("SHUTDOWN_TIMEOUT")
-	}()
+	defer clearEnv(t)
 
 	cfg := Load()
 
@@ -67,8 +69,9 @@ func TestLoadConfig_CustomEnv(t *testing.T) {
 }
 
 func TestLoadConfig_WithDBPassword(t *testing.T) {
+	clearEnv(t)
 	os.Setenv("DB_PASSWORD", "secret")
-	defer os.Unsetenv("DB_PASSWORD")
+	defer clearEnv(t)
 
 	cfg := Load()
 	expectedURL := "postgres://postgres:secret@localhost:5432/metrics?sslmode=disable"
@@ -78,8 +81,9 @@ func TestLoadConfig_WithDBPassword(t *testing.T) {
 }
 
 func TestLoadConfig_InvalidShutdownTimeout(t *testing.T) {
+	clearEnv(t)
 	os.Setenv("SHUTDOWN_TIMEOUT", "invalid-duration")
-	defer os.Unsetenv("SHUTDOWN_TIMEOUT")
+	defer clearEnv(t)
 
 	cfg := Load()
 	if cfg.ShutdownTimeout != 5*time.Second {

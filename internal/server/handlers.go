@@ -3,6 +3,8 @@ package server
 import (
 	"encoding/json"
 	"io"
+	"log/slog"
+	"math"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -64,7 +66,19 @@ func (h *Handler) HandlePostMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if math.IsNaN(val) || math.IsInf(val, 0) {
+		writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error": "body must be a finite numeric float",
+		})
+		return
+	}
+
 	if err := h.store.InsertMetric(r.Context(), category, metricName, val); err != nil {
+		slog.ErrorContext(r.Context(), "failed to persist metric",
+			"category", category,
+			"metric_name", metricName,
+			"error", err,
+		)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{
 			"error": "failed to persist metric",
 		})
@@ -78,6 +92,7 @@ func (h *Handler) HandlePostMetric(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) HandleHealthz(w http.ResponseWriter, r *http.Request) {
 	if err := h.store.Ping(r.Context()); err != nil {
+		slog.WarnContext(r.Context(), "health check ping failed", "error", err)
 		writeJSON(w, http.StatusServiceUnavailable, map[string]string{
 			"status": "unhealthy",
 			"error":  err.Error(),

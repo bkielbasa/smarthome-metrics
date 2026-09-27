@@ -66,6 +66,34 @@ func TestMetricHandler_InvalidFloat(t *testing.T) {
 	}
 }
 
+func TestMetricHandler_NaN(t *testing.T) {
+	store := &db.MockStore{}
+	handler := NewRouter(store)
+
+	req := httptest.NewRequest(http.MethodPost, "/metric/main_meter/delivery_current", bytes.NewBufferString("NaN"))
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("expected status 400 for NaN, got %d", rec.Code)
+	}
+}
+
+func TestMetricHandler_Infinity(t *testing.T) {
+	store := &db.MockStore{}
+	handler := NewRouter(store)
+
+	req := httptest.NewRequest(http.MethodPost, "/metric/main_meter/delivery_current", bytes.NewBufferString("+Inf"))
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("expected status 400 for +Inf, got %d", rec.Code)
+	}
+}
+
 func TestMetricHandler_EmptyBody(t *testing.T) {
 	store := &db.MockStore{}
 	handler := NewRouter(store)
