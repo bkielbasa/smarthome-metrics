@@ -4,22 +4,28 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strconv"
 	"time"
 )
 
 type Config struct {
-	Port            string
-	DatabaseURL     string
-	DBHost          string
-	DBPort          string
-	DBUser          string
-	DBPassword      string
-	DBName          string
-	DBSSLMode       string
-	ShutdownTimeout time.Duration
-	PSEEnabled      bool
-	PSEFetchInterval time.Duration
-	PSEApiURL       string
+	Port                         string
+	DatabaseURL                  string
+	DBHost                       string
+	DBPort                       string
+	DBUser                       string
+	DBPassword                   string
+	DBName                       string
+	DBSSLMode                    string
+	ShutdownTimeout              time.Duration
+	PSEEnabled                   bool
+	PSEFetchInterval             time.Duration
+	PSEApiURL                    string
+	SimulationEnabled            bool
+	SimulationInterval           time.Duration
+	SimulationBatteryCapacityKWh float64
+	SimulationBatteryPowerKW     float64
+	SimulationDistributionFee    float64
 }
 
 func getEnv(key, defaultValue string) string {
@@ -45,19 +51,59 @@ func Load() *Config {
 		pseFetchInterval = 15 * time.Minute
 	}
 
+	simEnabled := true
+	if val := os.Getenv("SIMULATION_ENABLED"); val != "" {
+		if parsed, err := strconv.ParseBool(val); err == nil {
+			simEnabled = parsed
+		}
+	}
+
+	simInterval := time.Minute
+	if val := os.Getenv("SIMULATION_INTERVAL"); val != "" {
+		if d, err := time.ParseDuration(val); err == nil && d > 0 {
+			simInterval = d
+		}
+	}
+
+	simCapacity := 10.0
+	if val := os.Getenv("SIMULATION_BATTERY_CAPACITY_KWH"); val != "" {
+		if f, err := strconv.ParseFloat(val, 64); err == nil && f > 0 {
+			simCapacity = f
+		}
+	}
+
+	simPower := 5.0
+	if val := os.Getenv("SIMULATION_BATTERY_POWER_KW"); val != "" {
+		if f, err := strconv.ParseFloat(val, 64); err == nil && f > 0 {
+			simPower = f
+		}
+	}
+
+	simFee := 0.40
+	if val := os.Getenv("SIMULATION_DISTRIBUTION_FEE"); val != "" {
+		if f, err := strconv.ParseFloat(val, 64); err == nil && f >= 0 {
+			simFee = f
+		}
+	}
+
 	return &Config{
-		Port:             getEnv("PORT", "8088"),
-		DatabaseURL:      getEnv("DATABASE_URL", ""),
-		DBHost:           getEnv("DB_HOST", "localhost"),
-		DBPort:           getEnv("DB_PORT", "5432"),
-		DBUser:           getEnv("DB_USER", "postgres"),
-		DBPassword:       getEnv("DB_PASSWORD", ""),
-		DBName:           getEnv("DB_NAME", "metrics"),
-		DBSSLMode:        getEnv("DB_SSLMODE", "disable"),
-		ShutdownTimeout:  shutdownTimeout,
-		PSEEnabled:       pseEnabled,
-		PSEFetchInterval: pseFetchInterval,
-		PSEApiURL:        getEnv("PSE_API_URL", "https://api.raporty.pse.pl/api/rce-pln"),
+		Port:                         getEnv("PORT", "8088"),
+		DatabaseURL:                  getEnv("DATABASE_URL", ""),
+		DBHost:                       getEnv("DB_HOST", "localhost"),
+		DBPort:                       getEnv("DB_PORT", "5432"),
+		DBUser:                       getEnv("DB_USER", "postgres"),
+		DBPassword:                   getEnv("DB_PASSWORD", ""),
+		DBName:                       getEnv("DB_NAME", "metrics"),
+		DBSSLMode:                    getEnv("DB_SSLMODE", "disable"),
+		ShutdownTimeout:              shutdownTimeout,
+		PSEEnabled:                   pseEnabled,
+		PSEFetchInterval:             pseFetchInterval,
+		PSEApiURL:                    getEnv("PSE_API_URL", "https://api.raporty.pse.pl/api/rce-pln"),
+		SimulationEnabled:            simEnabled,
+		SimulationInterval:           simInterval,
+		SimulationBatteryCapacityKWh: simCapacity,
+		SimulationBatteryPowerKW:     simPower,
+		SimulationDistributionFee:    simFee,
 	}
 }
 

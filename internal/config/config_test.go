@@ -6,7 +6,11 @@ import (
 	"time"
 )
 
-var envKeys = []string{"PORT", "DATABASE_URL", "DB_HOST", "DB_PORT", "DB_USER", "DB_PASSWORD", "DB_NAME", "DB_SSLMODE", "SHUTDOWN_TIMEOUT", "PSE_ENABLED", "PSE_FETCH_INTERVAL", "PSE_API_URL"}
+var envKeys = []string{
+	"PORT", "DATABASE_URL", "DB_HOST", "DB_PORT", "DB_USER", "DB_PASSWORD", "DB_NAME", "DB_SSLMODE",
+	"SHUTDOWN_TIMEOUT", "PSE_ENABLED", "PSE_FETCH_INTERVAL", "PSE_API_URL",
+	"SIMULATION_ENABLED", "SIMULATION_INTERVAL", "SIMULATION_BATTERY_CAPACITY_KWH", "SIMULATION_BATTERY_POWER_KW", "SIMULATION_DISTRIBUTION_FEE",
+}
 
 func clearEnv(t *testing.T) {
 	t.Helper()
@@ -120,6 +124,75 @@ func TestLoadConfig_InvalidPSEFetchInterval(t *testing.T) {
 	cfg := Load()
 	if cfg.PSEFetchInterval != 15*time.Minute {
 		t.Errorf("expected default PSEFetchInterval 15m on error, got %v", cfg.PSEFetchInterval)
+	}
+}
+
+func TestLoadConfig_SimulationDefaults(t *testing.T) {
+	clearEnv(t)
+
+	cfg := Load()
+	if !cfg.SimulationEnabled {
+		t.Errorf("expected SimulationEnabled to be true by default")
+	}
+	if cfg.SimulationInterval != time.Minute {
+		t.Errorf("expected SimulationInterval to be 1m, got %v", cfg.SimulationInterval)
+	}
+	if cfg.SimulationBatteryCapacityKWh != 10.0 {
+		t.Errorf("expected SimulationBatteryCapacityKWh to be 10.0, got %v", cfg.SimulationBatteryCapacityKWh)
+	}
+	if cfg.SimulationBatteryPowerKW != 5.0 {
+		t.Errorf("expected SimulationBatteryPowerKW to be 5.0, got %v", cfg.SimulationBatteryPowerKW)
+	}
+	if cfg.SimulationDistributionFee != 0.40 {
+		t.Errorf("expected SimulationDistributionFee to be 0.40, got %v", cfg.SimulationDistributionFee)
+	}
+}
+
+func TestLoadConfig_SimulationCustomEnv(t *testing.T) {
+	clearEnv(t)
+	t.Setenv("SIMULATION_ENABLED", "false")
+	t.Setenv("SIMULATION_INTERVAL", "30s")
+	t.Setenv("SIMULATION_BATTERY_CAPACITY_KWH", "15.5")
+	t.Setenv("SIMULATION_BATTERY_POWER_KW", "7.5")
+	t.Setenv("SIMULATION_DISTRIBUTION_FEE", "0.45")
+
+	cfg := Load()
+	if cfg.SimulationEnabled {
+		t.Errorf("expected SimulationEnabled to be false")
+	}
+	if cfg.SimulationInterval != 30*time.Second {
+		t.Errorf("expected SimulationInterval to be 30s, got %v", cfg.SimulationInterval)
+	}
+	if cfg.SimulationBatteryCapacityKWh != 15.5 {
+		t.Errorf("expected SimulationBatteryCapacityKWh to be 15.5, got %v", cfg.SimulationBatteryCapacityKWh)
+	}
+	if cfg.SimulationBatteryPowerKW != 7.5 {
+		t.Errorf("expected SimulationBatteryPowerKW to be 7.5, got %v", cfg.SimulationBatteryPowerKW)
+	}
+	if cfg.SimulationDistributionFee != 0.45 {
+		t.Errorf("expected SimulationDistributionFee to be 0.45, got %v", cfg.SimulationDistributionFee)
+	}
+}
+
+func TestLoadConfig_InvalidSimulationValues(t *testing.T) {
+	clearEnv(t)
+	t.Setenv("SIMULATION_INTERVAL", "invalid")
+	t.Setenv("SIMULATION_BATTERY_CAPACITY_KWH", "invalid")
+	t.Setenv("SIMULATION_BATTERY_POWER_KW", "invalid")
+	t.Setenv("SIMULATION_DISTRIBUTION_FEE", "invalid")
+
+	cfg := Load()
+	if cfg.SimulationInterval != time.Minute {
+		t.Errorf("expected default SimulationInterval 1m, got %v", cfg.SimulationInterval)
+	}
+	if cfg.SimulationBatteryCapacityKWh != 10.0 {
+		t.Errorf("expected default SimulationBatteryCapacityKWh 10.0, got %v", cfg.SimulationBatteryCapacityKWh)
+	}
+	if cfg.SimulationBatteryPowerKW != 5.0 {
+		t.Errorf("expected default SimulationBatteryPowerKW 5.0, got %v", cfg.SimulationBatteryPowerKW)
+	}
+	if cfg.SimulationDistributionFee != 0.40 {
+		t.Errorf("expected default SimulationDistributionFee 0.40, got %v", cfg.SimulationDistributionFee)
 	}
 }
 
