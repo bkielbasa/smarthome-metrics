@@ -57,6 +57,11 @@ database:
   # Optional key inside existingSecret that contains the complete DATABASE_URL
   urlSecretKey: ""
 
+pse:
+  enabled: true
+  fetchInterval: "15m"
+  apiUrl: "https://api.raporty.pse.pl/api/rce-pln"
+
 livenessProbe:
   httpGet:
     path: /healthz

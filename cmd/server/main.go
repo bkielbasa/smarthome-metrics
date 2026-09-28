@@ -13,6 +13,7 @@ import (
 
 	"github.com/bartlomiejklimczak/smarthome-metrics/internal/config"
 	"github.com/bartlomiejklimczak/smarthome-metrics/internal/db"
+	"github.com/bartlomiejklimczak/smarthome-metrics/internal/pse"
 	"github.com/bartlomiejklimczak/smarthome-metrics/internal/server"
 )
 
@@ -42,6 +43,12 @@ func run() error {
 	slog.Info("connected to PostgreSQL and initialized schema")
 
 	router := server.NewRouter(store)
+
+	if cfg.PSEEnabled {
+		pseClient := pse.NewClient(cfg.PSEApiURL, nil)
+		pseWorker := pse.NewWorker(pseClient, store, cfg.PSEFetchInterval, slog.Default())
+		go pseWorker.Start(ctx)
+	}
 
 	httpServer := &http.Server{
 		Addr:              fmt.Sprintf(":%s", cfg.Port),

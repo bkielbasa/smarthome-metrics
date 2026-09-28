@@ -69,6 +69,16 @@ func (s *PgxStore) InsertMetric(ctx context.Context, category, metricName string
 	return err
 }
 
+func (s *PgxStore) InsertMetricWithTimestamp(ctx context.Context, ts time.Time, category, metricName string, value float64) error {
+	query := `INSERT INTO metrics (timestamp, category, metric_name, value)
+SELECT $1, $2, $3, $4
+WHERE NOT EXISTS (
+    SELECT 1 FROM metrics WHERE category = $2 AND metric_name = $3 AND timestamp = $1
+)`
+	_, err := s.pool.Exec(ctx, query, ts, category, metricName, value)
+	return err
+}
+
 func (s *PgxStore) Ping(ctx context.Context) error {
 	pingCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()

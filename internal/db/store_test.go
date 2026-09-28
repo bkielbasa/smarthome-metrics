@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 )
 
 // Ensure both MockStore and PgxStore implement the MetricStore interface.
@@ -37,6 +38,22 @@ func TestMockStore(t *testing.T) {
 	}
 	if insertedCat != "power" || insertedMetric != "watts" || insertedVal != 1500.5 {
 		t.Errorf("mock did not capture correct values: %s %s %f", insertedCat, insertedMetric, insertedVal)
+	}
+
+	testTime := time.Date(2026, 9, 28, 12, 0, 0, 0, time.UTC)
+	var capturedTS time.Time
+	mock.InsertWithTimestampFunc = func(ctx context.Context, ts time.Time, category, metricName string, value float64) error {
+		capturedTS = ts
+		insertedCat = category
+		insertedMetric = metricName
+		insertedVal = value
+		return nil
+	}
+	if err := mock.InsertMetricWithTimestamp(ctx, testTime, "energy_market", "rce_kwh", 0.45); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !capturedTS.Equal(testTime) || insertedCat != "energy_market" || insertedMetric != "rce_kwh" || insertedVal != 0.45 {
+		t.Errorf("mock did not capture correct timestamped values: %v %s %s %f", capturedTS, insertedCat, insertedMetric, insertedVal)
 	}
 
 	if err := mock.Ping(ctx); err == nil {
