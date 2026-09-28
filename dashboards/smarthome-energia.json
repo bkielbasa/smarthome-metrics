@@ -529,7 +529,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \"timestamp\", value FROM metrics WHERE category = 'energy_market' AND metric_name = 'rce_kwh' ORDER BY \"timestamp\" DESC LIMIT 100",
+          "rawSql": "SELECT \"timestamp\", value FROM metrics WHERE category = 'energy_market' AND metric_name = 'rce_kwh' AND \"timestamp\" <= NOW() ORDER BY \"timestamp\" DESC LIMIT 100",
           "refId": "A"
         }
       ],
