@@ -15,6 +15,7 @@ import (
 	"github.com/bartlomiejklimczak/smarthome-metrics/internal/db"
 	"github.com/bartlomiejklimczak/smarthome-metrics/internal/pse"
 	"github.com/bartlomiejklimczak/smarthome-metrics/internal/server"
+	"github.com/bartlomiejklimczak/smarthome-metrics/internal/simulation"
 )
 
 func main() {
@@ -48,6 +49,17 @@ func run() error {
 		pseClient := pse.NewClient(cfg.PSEApiURL, nil)
 		pseWorker := pse.NewWorker(pseClient, store, cfg.PSEFetchInterval, slog.Default())
 		go pseWorker.Start(ctx)
+	}
+
+	if cfg.SimulationEnabled {
+		simModel := simulation.NewBatteryModel(
+			cfg.SimulationBatteryCapacityKWh,
+			cfg.SimulationBatteryPowerKW,
+			0.95,
+			cfg.SimulationDistributionFee,
+		)
+		simWorker := simulation.NewWorker(store, simModel, cfg.SimulationInterval, slog.Default())
+		go simWorker.Start(ctx)
 	}
 
 	httpServer := &http.Server{

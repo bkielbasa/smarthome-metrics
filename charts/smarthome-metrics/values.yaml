@@ -62,6 +62,13 @@ pse:
   fetchInterval: "15m"
   apiUrl: "https://api.raporty.pse.pl/api/rce-pln"
 
+simulation:
+  enabled: true
+  interval: "1m"
+  batteryCapacityKWh: 10.0
+  batteryPowerKW: 5.0
+  distributionFee: 0.40
+
 livenessProbe:
   httpGet:
     path: /healthz
