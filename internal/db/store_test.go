@@ -95,3 +95,78 @@ func TestPgxStore_CloseNilPool(t *testing.T) {
 	store.Close() // Should not panic
 }
 
+func TestMockStore_GetLatestMetric(t *testing.T) {
+	mock := &MockStore{}
+	now := time.Now().UTC()
+	err := mock.InsertMetricWithTimestamp(context.Background(), now, "simulation", "sim_battery_soc_kwh", 7.5)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	val, ts, err := mock.GetLatestMetric(context.Background(), "simulation", "sim_battery_soc_kwh")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if val != 7.5 {
+		t.Errorf("expected value 7.5, got %v", val)
+	}
+	if !ts.Equal(now) {
+		t.Errorf("expected timestamp %v, got %v", now, ts)
+	}
+
+	// Missing metric
+	_, _, err = mock.GetLatestMetric(context.Background(), "unknown", "unknown")
+	if err != ErrMetricNotFound {
+		t.Errorf("expected ErrMetricNotFound, got %v", err)
+	}
+}
+
+func TestMockStore_GetLatestMetric_Ordering(t *testing.T) {
+	mock := &MockStore{}
+	t1 := time.Date(2026, 9, 28, 10, 0, 0, 0, time.UTC)
+	t2 := time.Date(2026, 9, 28, 12, 0, 0, 0, time.UTC)
+	t3 := time.Date(2026, 9, 28, 11, 0, 0, 0, time.UTC)
+
+	// Insert in non-chronological order
+	_ = mock.InsertMetricWithTimestamp(context.Background(), t1, "sim", "soc", 5.0)
+	_ = mock.InsertMetricWithTimestamp(context.Background(), t2, "sim", "soc", 10.0)
+	_ = mock.InsertMetricWithTimestamp(context.Background(), t3, "sim", "soc", 7.5)
+
+	val, ts, err := mock.GetLatestMetric(context.Background(), "sim", "soc")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if val != 10.0 {
+		t.Errorf("expected value 10.0 (latest timestamp), got %v", val)
+	}
+	if !ts.Equal(t2) {
+		t.Errorf("expected timestamp %v, got %v", t2, ts)
+	}
+}
+
+func TestMockStore_GetLatestMetric_FuncOverride(t *testing.T) {
+	customTS := time.Date(2026, 9, 28, 15, 0, 0, 0, time.UTC)
+	mock := &MockStore{
+		GetLatestMetricFunc: func(ctx context.Context, category, metricName string) (float64, time.Time, error) {
+			if category == "cat" && metricName == "name" {
+				return 42.0, customTS, nil
+			}
+			return 0, time.Time{}, ErrMetricNotFound
+		},
+	}
+
+	val, ts, err := mock.GetLatestMetric(context.Background(), "cat", "name")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if val != 42.0 || !ts.Equal(customTS) {
+		t.Errorf("expected 42.0 and %v, got %v and %v", customTS, val, ts)
+	}
+
+	_, _, err = mock.GetLatestMetric(context.Background(), "other", "other")
+	if err != ErrMetricNotFound {
+		t.Errorf("expected ErrMetricNotFound, got %v", err)
+	}
+}
+
+

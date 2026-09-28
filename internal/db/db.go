@@ -2,9 +2,11 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -77,6 +79,19 @@ WHERE NOT EXISTS (
 )`
 	_, err := s.pool.Exec(ctx, query, ts, category, metricName, value)
 	return err
+}
+
+func (s *PgxStore) GetLatestMetric(ctx context.Context, category, metricName string) (float64, time.Time, error) {
+	query := `SELECT value, timestamp FROM metrics 
+WHERE category = $1::text AND metric_name = $2::text 
+ORDER BY timestamp DESC LIMIT 1`
+	var val float64
+	var ts time.Time
+	err := s.pool.QueryRow(ctx, query, category, metricName).Scan(&val, &ts)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return 0, time.Time{}, ErrMetricNotFound
+	}
+	return val, ts, err
 }
 
 func (s *PgxStore) Ping(ctx context.Context) error {

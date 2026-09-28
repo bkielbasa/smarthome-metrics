@@ -54,6 +54,10 @@ func (m *mockStoreWithTimestamp) Ping(ctx context.Context) error {
 	return nil
 }
 
+func (m *mockStoreWithTimestamp) GetLatestMetric(ctx context.Context, category, metricName string) (float64, time.Time, error) {
+	return 0, time.Time{}, nil
+}
+
 func (m *mockStoreWithTimestamp) Close() {}
 
 func TestWorker_Sync_Success(t *testing.T) {
