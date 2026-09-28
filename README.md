@@ -25,6 +25,7 @@ A lightweight, high-performance Go microservice designed to ingest smart home an
   - [Installing the Chart](#installing-the-chart)
   - [Database Configuration Patterns](#database-configuration-patterns)
   - [Linting and Templating](#linting-and-templating)
+- [Grafana Dashboards & Git-Sync](#grafana-dashboards--git-sync)
 - [CI/CD & Releases](#cicd--releases)
 - [License](#license)
 
@@ -318,6 +319,31 @@ helm template test charts/smarthome-metrics
 helm template test charts/smarthome-metrics \
   --set database.existingSecret=smarthome-db-credentials
 ```
+
+---
+
+## Grafana Dashboards & Git-Sync
+
+Pre-configured Grafana dashboards are provided in [`dashboards/`](./dashboards):
+- **Energy consumption & power**: [`dashboards/smarthome-energia.json`](./dashboards/smarthome-energia.json)
+- **Room climates & telemetry**: [`dashboards/smarthome-pokoje.json`](./dashboards/smarthome-pokoje.json)
+
+### Auto-Loading Dashboards in Kubernetes with Git-Sync
+
+To automatically synchronize dashboards directly from GitHub with zero downtime whenever updates are pushed:
+
+```bash
+# Add Grafana helm repository
+helm repo add grafana https://grafana.github.io/helm-charts
+helm repo update
+
+# Deploy Grafana with git-sync values
+helm upgrade --install grafana grafana/grafana \
+  --namespace monitoring --create-namespace \
+  -f deploy/grafana/values-git-sync.yaml
+```
+
+See [dashboards/README.md](./dashboards/README.md) for full architecture and configuration details.
 
 ---
 
