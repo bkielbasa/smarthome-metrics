@@ -124,6 +124,9 @@ func (w *Worker) Step(ctx context.Context, deltaHours float64) error {
 		{"sim_savings_pln", cumSavings},
 	}
 
+	// Note: in-memory model state and cumulative savings have already advanced.
+	// If a transient DB insert error occurs, we return the error while preserving
+	// state continuity so the subsequent tick will persist updated cumulative metrics.
 	for _, rec := range records {
 		if err := w.store.InsertMetric(ctx, "simulation", rec.name, rec.value); err != nil {
 			return fmt.Errorf("failed to insert metric %s: %w", rec.name, err)

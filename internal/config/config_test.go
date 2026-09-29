@@ -196,3 +196,25 @@ func TestLoadConfig_InvalidSimulationValues(t *testing.T) {
 	}
 }
 
+func TestLoadConfig_NegativeSimulationValues(t *testing.T) {
+	clearEnv(t)
+	t.Setenv("SIMULATION_INTERVAL", "-10s")
+	t.Setenv("SIMULATION_BATTERY_CAPACITY_KWH", "-5.0")
+	t.Setenv("SIMULATION_BATTERY_POWER_KW", "0")
+	t.Setenv("SIMULATION_DISTRIBUTION_FEE", "-0.10")
+
+	cfg := Load()
+	if cfg.SimulationInterval != time.Minute {
+		t.Errorf("expected default SimulationInterval 1m, got %v", cfg.SimulationInterval)
+	}
+	if cfg.SimulationBatteryCapacityKWh != 10.0 {
+		t.Errorf("expected default SimulationBatteryCapacityKWh 10.0, got %v", cfg.SimulationBatteryCapacityKWh)
+	}
+	if cfg.SimulationBatteryPowerKW != 5.0 {
+		t.Errorf("expected default SimulationBatteryPowerKW 5.0, got %v", cfg.SimulationBatteryPowerKW)
+	}
+	if cfg.SimulationDistributionFee != 0.40 {
+		t.Errorf("expected default SimulationDistributionFee 0.40, got %v", cfg.SimulationDistributionFee)
+	}
+}
+

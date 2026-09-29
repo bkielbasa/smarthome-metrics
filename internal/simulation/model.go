@@ -11,7 +11,7 @@ type BatteryModel struct {
 	MaxPowerKW       float64
 	Efficiency       float64
 	DistributionFee  float64
-	CurrentEnergyKWh float64
+	currentEnergyKWh float64
 }
 
 // NewBatteryModel constructs a new BatteryModel with the given parameters.
@@ -34,7 +34,7 @@ func NewBatteryModel(capacityKWh, maxPowerKW, efficiency, distributionFee float6
 		MaxPowerKW:       maxPowerKW,
 		Efficiency:       efficiency,
 		DistributionFee:  distributionFee,
-		CurrentEnergyKWh: capacityKWh * 0.5,
+		currentEnergyKWh: capacityKWh * 0.5,
 	}
 }
 
@@ -49,14 +49,14 @@ func (m *BatteryModel) SetEnergy(kwh float64) {
 	if kwh > m.CapacityKWh {
 		kwh = m.CapacityKWh
 	}
-	m.CurrentEnergyKWh = kwh
+	m.currentEnergyKWh = kwh
 }
 
 // Energy returns the current stored energy in kWh.
 func (m *BatteryModel) Energy() float64 {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	return m.CurrentEnergyKWh
+	return m.currentEnergyKWh
 }
 
 // Capacity returns the total capacity in kWh.
@@ -89,12 +89,12 @@ func (m *BatteryModel) Step(in StepInput) StepOutput {
 
 	socPct := 0.0
 	if m.CapacityKWh > 0 {
-		socPct = (m.CurrentEnergyKWh / m.CapacityKWh) * 100.0
+		socPct = (m.currentEnergyKWh / m.CapacityKWh) * 100.0
 	}
 
 	if in.DurationHours <= 0 {
 		return StepOutput{
-			BatteryEnergyKWh:   m.CurrentEnergyKWh,
+			BatteryEnergyKWh:   m.currentEnergyKWh,
 			BatteryPowerW:      0,
 			BatterySoCPct:      socPct,
 			SavingsIntervalPLN: 0,
@@ -112,7 +112,7 @@ func (m *BatteryModel) Step(in StepInput) StepOutput {
 	}
 
 	// Maximum charging power allowed by available capacity headroom
-	headroomKWh := m.CapacityKWh - m.CurrentEnergyKWh
+	headroomKWh := m.CapacityKWh - m.currentEnergyKWh
 	if headroomKWh < 0 {
 		headroomKWh = 0
 	}
@@ -123,7 +123,7 @@ func (m *BatteryModel) Step(in StepInput) StepOutput {
 	}
 
 	// Maximum discharging power allowed by available energy
-	availEnergyKWh := m.CurrentEnergyKWh
+	availEnergyKWh := m.currentEnergyKWh
 	if availEnergyKWh < 0 {
 		availEnergyKWh = 0
 	}
@@ -139,7 +139,7 @@ func (m *BatteryModel) Step(in StepInput) StepOutput {
 	// 1. Low Price Arbitrage: SoC < 80% and RCE < 0.15 PLN/kWh
 	if socPct < 80.0 && in.RCEKWh < 0.15 {
 		target80KWh := 0.80 * m.CapacityKWh
-		headroom80KWh := target80KWh - m.CurrentEnergyKWh
+		headroom80KWh := target80KWh - m.currentEnergyKWh
 		if headroom80KWh < 0 {
 			headroom80KWh = 0
 		}
@@ -176,7 +176,7 @@ func (m *BatteryModel) Step(in StepInput) StepOutput {
 			remainingInverterW := maxPowerW - coverLoad
 
 			floor50KWh := 0.50 * m.CapacityKWh
-			availAbove50KWh := m.CurrentEnergyKWh - floor50KWh
+			availAbove50KWh := m.currentEnergyKWh - floor50KWh
 			if availAbove50KWh < 0 {
 				availAbove50KWh = 0
 			}
@@ -194,7 +194,7 @@ func (m *BatteryModel) Step(in StepInput) StepOutput {
 			batteryPowerW = -(coverLoad + gridDischarge)
 		} else {
 			floor50KWh := 0.50 * m.CapacityKWh
-			availAbove50KWh := m.CurrentEnergyKWh - floor50KWh
+			availAbove50KWh := m.currentEnergyKWh - floor50KWh
 			if availAbove50KWh < 0 {
 				availAbove50KWh = 0
 			}
@@ -230,16 +230,16 @@ func (m *BatteryModel) Step(in StepInput) StepOutput {
 	if batteryPowerW > 0 {
 		energyInKWh := (batteryPowerW * in.DurationHours) / 1000.0
 		energyAddedKWh := energyInKWh * eff
-		m.CurrentEnergyKWh += energyAddedKWh
-		if m.CurrentEnergyKWh > m.CapacityKWh {
-			m.CurrentEnergyKWh = m.CapacityKWh
+		m.currentEnergyKWh += energyAddedKWh
+		if m.currentEnergyKWh > m.CapacityKWh {
+			m.currentEnergyKWh = m.CapacityKWh
 		}
 	} else if batteryPowerW < 0 {
 		energyOutKWh := (-batteryPowerW * in.DurationHours) / 1000.0
 		energyDrawnKWh := energyOutKWh / eff
-		m.CurrentEnergyKWh -= energyDrawnKWh
-		if m.CurrentEnergyKWh < 0 {
-			m.CurrentEnergyKWh = 0
+		m.currentEnergyKWh -= energyDrawnKWh
+		if m.currentEnergyKWh < 0 {
+			m.currentEnergyKWh = 0
 		}
 	}
 
@@ -276,11 +276,11 @@ func (m *BatteryModel) Step(in StepInput) StepOutput {
 
 	newSoCPct := 0.0
 	if m.CapacityKWh > 0 {
-		newSoCPct = (m.CurrentEnergyKWh / m.CapacityKWh) * 100.0
+		newSoCPct = (m.currentEnergyKWh / m.CapacityKWh) * 100.0
 	}
 
 	return StepOutput{
-		BatteryEnergyKWh:   m.CurrentEnergyKWh,
+		BatteryEnergyKWh:   m.currentEnergyKWh,
 		BatteryPowerW:      batteryPowerW,
 		BatterySoCPct:      newSoCPct,
 		SavingsIntervalPLN: savingsIntervalPLN,
