@@ -80,7 +80,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(SUM(value), 0) AS \"Oszczędności Dziś\" FROM metrics WHERE category = 'simulation' AND metric_name = 'sim_savings_interval_pln' AND \"timestamp\" >= DATE_TRUNC('day', NOW());",
+          "rawSql": "SELECT COALESCE(SUM(value), 0) AS \"Oszczędności Dziś\" FROM metrics WHERE category = '' AND metric_name = 'sim_savings_interval_pln' AND \"timestamp\" >= DATE_TRUNC('day', NOW());",
           "refId": "A"
         }
       ],
@@ -147,7 +147,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(SUM(value), 0) AS \"Oszczędności 7 Dni\" FROM metrics WHERE category = 'simulation' AND metric_name = 'sim_savings_interval_pln' AND \"timestamp\" >= NOW() - INTERVAL '7 days';",
+          "rawSql": "SELECT COALESCE(SUM(value), 0) AS \"Oszczędności 7 Dni\" FROM metrics WHERE category = '' AND metric_name = 'sim_savings_interval_pln' AND \"timestamp\" >= NOW() - INTERVAL '7 days';",
           "refId": "A"
         }
       ],
@@ -214,7 +214,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(SUM(value), 0) AS \"Oszczędności 30 Dni\" FROM metrics WHERE category = 'simulation' AND metric_name = 'sim_savings_interval_pln' AND \"timestamp\" >= NOW() - INTERVAL '30 days';",
+          "rawSql": "SELECT COALESCE(SUM(value), 0) AS \"Oszczędności 30 Dni\" FROM metrics WHERE category = '' AND metric_name = 'sim_savings_interval_pln' AND \"timestamp\" >= NOW() - INTERVAL '30 days';",
           "refId": "A"
         }
       ],
@@ -281,7 +281,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE((SUM(value) / NULLIF(EXTRACT(EPOCH FROM (MAX(\"timestamp\") - MIN(\"timestamp\"))), 0) * 86400 * 365.25), 0) AS \"Prognoza Roczna\" FROM metrics WHERE category = 'simulation' AND metric_name = 'sim_savings_interval_pln';",
+          "rawSql": "SELECT COALESCE((SUM(value) / NULLIF(EXTRACT(EPOCH FROM (MAX(\"timestamp\") - MIN(\"timestamp\"))), 0) * 86400 * 365.25), 0) AS \"Prognoza Roczna\" FROM metrics WHERE category = '' AND metric_name = 'sim_savings_interval_pln';",
           "refId": "A"
         }
       ],
@@ -352,7 +352,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \"timestamp\", value AS \"SoC (%)\" FROM metrics WHERE category = 'simulation' AND metric_name = 'sim_battery_soc_pct' ORDER BY \"timestamp\" DESC LIMIT 1;",
+          "rawSql": "SELECT \"timestamp\", value AS \"SoC (%)\" FROM metrics WHERE category = '' AND metric_name = 'sim_battery_soc_pct' ORDER BY \"timestamp\" DESC LIMIT 1;",
           "refId": "A"
         }
       ],
@@ -423,7 +423,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \"timestamp\", value AS \"Moc (W)\" FROM metrics WHERE category = 'simulation' AND metric_name = 'sim_battery_power_w' ORDER BY \"timestamp\" DESC LIMIT 1;",
+          "rawSql": "SELECT \"timestamp\", value AS \"Moc (W)\" FROM metrics WHERE category = '' AND metric_name = 'sim_battery_power_w' ORDER BY \"timestamp\" DESC LIMIT 1;",
           "refId": "A"
         }
       ],
@@ -574,7 +574,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \"timestamp\" AS time, value AS \"Poziom energii (kWh)\" FROM metrics WHERE category = 'simulation' AND metric_name = 'sim_battery_soc_kwh' AND $__timeFilter(\"timestamp\") ORDER BY \"timestamp\" ASC;",
+          "rawSql": "SELECT \"timestamp\" AS time, value AS \"Poziom energii (kWh)\" FROM metrics WHERE category = '' AND metric_name = 'sim_battery_soc_kwh' AND $__timeFilter(\"timestamp\") ORDER BY \"timestamp\" ASC;",
           "refId": "A"
         },
         {
@@ -585,7 +585,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \"timestamp\" AS time, value AS \"Moc (W)\" FROM metrics WHERE category = 'simulation' AND metric_name = 'sim_battery_power_w' AND $__timeFilter(\"timestamp\") ORDER BY \"timestamp\" ASC;",
+          "rawSql": "SELECT \"timestamp\" AS time, value AS \"Moc (W)\" FROM metrics WHERE category = '' AND metric_name = 'sim_battery_power_w' AND $__timeFilter(\"timestamp\") ORDER BY \"timestamp\" ASC;",
           "refId": "B"
         }
       ],
@@ -682,13 +682,110 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \"timestamp\" AS time, value AS \"Oszczędności (PLN)\" FROM metrics WHERE category = 'simulation' AND metric_name = 'sim_savings_pln' AND $__timeFilter(\"timestamp\") ORDER BY \"timestamp\" ASC;",
+          "rawSql": "SELECT \"timestamp\" AS time, value AS \"10 kWh / 5 kW (Standard)\" FROM metrics WHERE category = 'simulation_10kwh_5kw' AND metric_name = 'sim_savings_pln' AND (\"timestamp\") ORDER BY \"timestamp\" ASC;",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "dfzk58ktrrnr4f"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \"timestamp\" AS time, value AS \"10 kWh / 10 kW\" FROM metrics WHERE category = 'simulation_10kwh_10kw' AND metric_name = 'sim_savings_pln' AND (\"timestamp\") ORDER BY \"timestamp\" ASC;",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "dfzk58ktrrnr4f"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \"timestamp\" AS time, value AS \"5 kWh / 5 kW\" FROM metrics WHERE category = 'simulation_5kwh_5kw' AND metric_name = 'sim_savings_pln' AND (\"timestamp\") ORDER BY \"timestamp\" ASC;",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "dfzk58ktrrnr4f"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \"timestamp\" AS time, value AS \"5 kWh / 10 kW\" FROM metrics WHERE category = 'simulation_5kwh_10kw' AND metric_name = 'sim_savings_pln' AND (\"timestamp\") ORDER BY \"timestamp\" ASC;",
+          "refId": "D"
+        }
+      ],
+      "title": "Porównanie Skumulowanych Oszczędności (PLN)",
+      "transparent": true,
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "dfzk58ktrrnr4f"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyPLN"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 19
+      },
+      "id": 9,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "valueMode": "color"
+      },
+      "pluginVersion": "11.6.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "dfzk58ktrrnr4f"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  CASE category\n    WHEN 'simulation_10kwh_5kw' THEN '10 kWh / 5 kW (Standard)'\n    WHEN 'simulation_10kwh_10kw' THEN '10 kWh / 10 kW'\n    WHEN 'simulation_5kwh_5kw' THEN '5 kWh / 5 kW'\n    WHEN 'simulation_5kwh_10kw' THEN '5 kWh / 10 kW'\n  END AS \"Wariant\",\n  value AS \"Oszczędności (PLN)\"\nFROM metrics\nWHERE metric_name = 'sim_savings_pln'\n  AND category IN ('simulation_10kwh_5kw', 'simulation_10kwh_10kw', 'simulation_5kwh_5kw', 'simulation_5kwh_10kw')\n  AND \"timestamp\" = (SELECT MAX(\"timestamp\") FROM metrics WHERE metric_name = 'sim_savings_pln')\nORDER BY value DESC;",
           "refId": "A"
         }
       ],
-      "title": "Skumulowane Oszczędności (PLN)",
+      "title": "Ranking Oszczędności Całkowitych (PLN) - Porównanie Wariantów",
       "transparent": true,
-      "type": "timeseries"
+      "type": "bargauge"
     }
   ],
   "preload": false,
@@ -702,7 +799,46 @@
     "rce"
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "10 kWh / 5 kW (Standard)",
+          "value": "simulation_10kwh_5kw"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Wariant magazynu",
+        "multi": false,
+        "name": "variant",
+        "options": [
+          {
+            "selected": true,
+            "text": "10 kWh / 5 kW (Standard)",
+            "value": "simulation_10kwh_5kw"
+          },
+          {
+            "selected": false,
+            "text": "10 kWh / 10 kW",
+            "value": "simulation_10kwh_10kw"
+          },
+          {
+            "selected": false,
+            "text": "5 kWh / 5 kW",
+            "value": "simulation_5kwh_5kw"
+          },
+          {
+            "selected": false,
+            "text": "5 kWh / 10 kW",
+            "value": "simulation_5kwh_10kw"
+          }
+        ],
+        "query": "10 kWh / 5 kW (Standard) : simulation_10kwh_5kw, 10 kWh / 10 kW : simulation_10kwh_10kw, 5 kWh / 5 kW : simulation_5kwh_5kw, 5 kWh / 10 kW : simulation_5kwh_10kw",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      }
+    ]
   },
   "time": {
     "from": "now-24h",

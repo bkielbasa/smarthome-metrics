@@ -84,7 +84,7 @@ func TestWorker_Rehydrate_LoadsExistingState(t *testing.T) {
 	store.setLatest("simulation", "sim_savings_pln", 34.20)
 
 	model := NewBatteryModel(10.0, 5.0, 0.95, 0.40)
-	worker := NewWorker(store, model, time.Minute, nil)
+	worker := NewSingleWorker(store, model, time.Minute, nil)
 
 	ctx := context.Background()
 	if err := worker.Rehydrate(ctx); err != nil {
@@ -103,7 +103,7 @@ func TestWorker_Rehydrate_NotFoundDefaults(t *testing.T) {
 	store := newTestStore()
 	model := NewBatteryModel(10.0, 5.0, 0.95, 0.40)
 	// NewBatteryModel initializes energy to 50% capacity (5.0 kWh)
-	worker := NewWorker(store, model, time.Minute, nil)
+	worker := NewSingleWorker(store, model, time.Minute, nil)
 
 	ctx := context.Background()
 	if err := worker.Rehydrate(ctx); err != nil {
@@ -123,7 +123,7 @@ func TestWorker_Rehydrate_DatabaseError(t *testing.T) {
 	store.getError = errors.New("db connection refused")
 
 	model := NewBatteryModel(10.0, 5.0, 0.95, 0.40)
-	worker := NewWorker(store, model, time.Minute, nil)
+	worker := NewSingleWorker(store, model, time.Minute, nil)
 
 	ctx := context.Background()
 	if err := worker.Rehydrate(ctx); err == nil {
@@ -140,7 +140,7 @@ func TestWorker_Step_CalculatesAndInsertsMetrics(t *testing.T) {
 	model := NewBatteryModel(10.0, 5.0, 0.95, 0.40)
 	model.SetEnergy(5.0)
 
-	worker := NewWorker(store, model, time.Minute, nil)
+	worker := NewSingleWorker(store, model, time.Minute, nil)
 
 	ctx := context.Background()
 	deltaHours := 1.0 / 60.0 // 1 minute
@@ -254,7 +254,7 @@ func TestWorker_Step_MissingTelemetry(t *testing.T) {
 
 			model := NewBatteryModel(10.0, 5.0, 0.95, 0.40)
 			initialEnergy := model.Energy()
-			worker := NewWorker(store, model, time.Minute, nil)
+			worker := NewSingleWorker(store, model, time.Minute, nil)
 
 			err := worker.Step(context.Background(), 1.0/60.0)
 			if err == nil {
@@ -282,7 +282,7 @@ func TestWorker_Step_InsertError(t *testing.T) {
 	store.insertError = errors.New("db insert failed")
 
 	model := NewBatteryModel(10.0, 5.0, 0.95, 0.40)
-	worker := NewWorker(store, model, time.Minute, nil)
+	worker := NewSingleWorker(store, model, time.Minute, nil)
 
 	err := worker.Step(context.Background(), 1.0/60.0)
 	if err == nil {
@@ -293,7 +293,7 @@ func TestWorker_Step_InsertError(t *testing.T) {
 func TestWorker_Start_GracefulShutdown(t *testing.T) {
 	store := newTestStore()
 	model := NewBatteryModel(10.0, 5.0, 0.95, 0.40)
-	worker := NewWorker(store, model, 10*time.Millisecond, nil)
+	worker := NewSingleWorker(store, model, 10*time.Millisecond, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan struct{})
@@ -322,7 +322,7 @@ func TestWorker_Start_TickerExecutesStep(t *testing.T) {
 	store.setLatest("energy_market", "rce_kwh", 0.60)
 
 	model := NewBatteryModel(10.0, 5.0, 0.95, 0.40)
-	worker := NewWorker(store, model, 15*time.Millisecond, nil)
+	worker := NewSingleWorker(store, model, 15*time.Millisecond, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -349,5 +349,75 @@ func TestWorker_Start_TickerExecutesStep(t *testing.T) {
 
 	if count < 5 {
 		t.Fatalf("expected at least 5 metrics inserted by ticker, got %d", count)
+	}
+}
+
+func TestWorker_DefaultVariants_StepAndRehydrate(t *testing.T) {
+	store := newTestStore()
+	store.setLatest("photovoltaics", "current", 6000.0)
+	store.setLatest("main_meter", "current_usage", 1000.0)
+	store.setLatest("energy_market", "rce_kwh", 0.50)
+
+	variants := DefaultVariants(0.95, 0.40)
+	if len(variants) != 4 {
+		t.Fatalf("expected 4 default variants, got %d", len(variants))
+	}
+
+	worker := NewWorker(store, variants, time.Minute, nil)
+
+	ctx := context.Background()
+	deltaHours := 1.0 / 60.0
+
+	if err := worker.Step(ctx, deltaHours); err != nil {
+		t.Fatalf("unexpected error on Step(): %v", err)
+	}
+
+	inserts := store.getInserts()
+	// 3 non-default variants * 5 + 1 default variant * (5 + 5) = 25 inserts
+	if len(inserts) != 25 {
+		t.Fatalf("expected 25 metrics inserted across 4 variants (with default alias), got %d", len(inserts))
+	}
+
+	categories := make(map[string]int)
+	for _, ins := range inserts {
+		categories[ins.category]++
+	}
+
+	expectedCategories := []string{
+		"simulation_5kwh_5kw",
+		"simulation_5kwh_10kw",
+		"simulation_10kwh_5kw",
+		"simulation_10kwh_10kw",
+		"simulation",
+	}
+
+	for _, cat := range expectedCategories {
+		if count := categories[cat]; count != 5 {
+			t.Errorf("expected 5 inserts for category %q, got %d", cat, count)
+		}
+	}
+
+	// Verify CumulativeSavings query
+	defaultSavings := worker.CumulativeSavings()
+	if defaultSavings == 0 {
+		t.Errorf("expected non-zero default savings, got 0")
+	}
+	var5kwSavings := worker.CumulativeSavings("5kwh_5kw")
+	if var5kwSavings == 0 {
+		t.Errorf("expected non-zero 5kwh_5kw savings, got 0")
+	}
+
+	// Create new worker to verify Rehydrate loads from store
+	newVariants := DefaultVariants(0.95, 0.40)
+	newWorker := NewWorker(store, newVariants, time.Minute, nil)
+	if err := newWorker.Rehydrate(ctx); err != nil {
+		t.Fatalf("unexpected error rehydrating multi-variants: %v", err)
+	}
+
+	if newWorker.CumulativeSavings() != defaultSavings {
+		t.Errorf("expected rehydrated default savings %f, got %f", defaultSavings, newWorker.CumulativeSavings())
+	}
+	if newWorker.CumulativeSavings("5kwh_5kw") != var5kwSavings {
+		t.Errorf("expected rehydrated 5kwh_5kw savings %f, got %f", var5kwSavings, newWorker.CumulativeSavings("5kwh_5kw"))
 	}
 }

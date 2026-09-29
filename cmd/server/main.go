@@ -52,13 +52,8 @@ func run() error {
 	}
 
 	if cfg.SimulationEnabled {
-		simModel := simulation.NewBatteryModel(
-			cfg.SimulationBatteryCapacityKWh,
-			cfg.SimulationBatteryPowerKW,
-			0.95,
-			cfg.SimulationDistributionFee,
-		)
-		simWorker := simulation.NewWorker(store, simModel, cfg.SimulationInterval, slog.Default())
+		variants := simulation.DefaultVariants(0.95, cfg.SimulationDistributionFee)
+		simWorker := simulation.NewWorker(store, variants, cfg.SimulationInterval, slog.Default())
 		go simWorker.Start(ctx)
 	}
 
