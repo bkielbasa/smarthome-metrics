@@ -4,6 +4,7 @@ This directory contains pre-configured Grafana dashboards for `smarthome-metrics
 
 - **[`smarthome-energia.json`](./smarthome-energia.json)**: Energy consumption and power metrics (per phase, daily totals, and real-time usage).
 - **[`smarthome-pokoje.json`](./smarthome-pokoje.json)**: Room climate metrics (temperature, humidity, pressure across living areas).
+- **[`smarthome-symulacja.json`](./smarthome-symulacja.json)**: Energy storage simulation metrics (battery state of charge, power flow, and estimated financial savings using dynamic RCE tariffs).
 
 ---
 
