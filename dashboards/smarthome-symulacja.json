@@ -80,7 +80,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(SUM(value), 0) AS \"Oszczędności Dziś\" FROM metrics WHERE category = '' AND metric_name = 'sim_savings_interval_pln' AND \"timestamp\" >= DATE_TRUNC('day', NOW());",
+          "rawSql": "SELECT COALESCE(SUM(value), 0) AS \"Oszczędności Dziś\" FROM metrics WHERE category = $variant AND metric_name = 'sim_savings_interval_pln' AND \"timestamp\" >= DATE_TRUNC('day', NOW());",
           "refId": "A"
         }
       ],
@@ -147,7 +147,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(SUM(value), 0) AS \"Oszczędności 7 Dni\" FROM metrics WHERE category = '' AND metric_name = 'sim_savings_interval_pln' AND \"timestamp\" >= NOW() - INTERVAL '7 days';",
+          "rawSql": "SELECT COALESCE(SUM(value), 0) AS \"Oszczędności 7 Dni\" FROM metrics WHERE category = $variant AND metric_name = 'sim_savings_interval_pln' AND \"timestamp\" >= NOW() - INTERVAL '7 days';",
           "refId": "A"
         }
       ],
@@ -214,7 +214,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(SUM(value), 0) AS \"Oszczędności 30 Dni\" FROM metrics WHERE category = '' AND metric_name = 'sim_savings_interval_pln' AND \"timestamp\" >= NOW() - INTERVAL '30 days';",
+          "rawSql": "SELECT COALESCE(SUM(value), 0) AS \"Oszczędności 30 Dni\" FROM metrics WHERE category = $variant AND metric_name = 'sim_savings_interval_pln' AND \"timestamp\" >= NOW() - INTERVAL '30 days';",
           "refId": "A"
         }
       ],
@@ -281,7 +281,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE((SUM(value) / NULLIF(EXTRACT(EPOCH FROM (MAX(\"timestamp\") - MIN(\"timestamp\"))), 0) * 86400 * 365.25), 0) AS \"Prognoza Roczna\" FROM metrics WHERE category = '' AND metric_name = 'sim_savings_interval_pln';",
+          "rawSql": "SELECT COALESCE((SUM(value) / NULLIF(EXTRACT(EPOCH FROM (MAX(\"timestamp\") - MIN(\"timestamp\"))), 0) * 86400 * 365.25), 0) AS \"Prognoza Roczna\" FROM metrics WHERE category = $variant AND metric_name = 'sim_savings_interval_pln';",
           "refId": "A"
         }
       ],
@@ -352,7 +352,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \"timestamp\", value AS \"SoC (%)\" FROM metrics WHERE category = '' AND metric_name = 'sim_battery_soc_pct' ORDER BY \"timestamp\" DESC LIMIT 1;",
+          "rawSql": "SELECT \"timestamp\", value AS \"SoC (%)\" FROM metrics WHERE category = $variant AND metric_name = 'sim_battery_soc_pct' ORDER BY \"timestamp\" DESC LIMIT 1;",
           "refId": "A"
         }
       ],
@@ -423,7 +423,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \"timestamp\", value AS \"Moc (W)\" FROM metrics WHERE category = '' AND metric_name = 'sim_battery_power_w' ORDER BY \"timestamp\" DESC LIMIT 1;",
+          "rawSql": "SELECT \"timestamp\", value AS \"Moc (W)\" FROM metrics WHERE category = $variant AND metric_name = 'sim_battery_power_w' ORDER BY \"timestamp\" DESC LIMIT 1;",
           "refId": "A"
         }
       ],
@@ -574,7 +574,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \"timestamp\" AS time, value AS \"Poziom energii (kWh)\" FROM metrics WHERE category = '' AND metric_name = 'sim_battery_soc_kwh' AND $__timeFilter(\"timestamp\") ORDER BY \"timestamp\" ASC;",
+          "rawSql": "SELECT \"timestamp\" AS time, value AS \"Poziom energii (kWh)\" FROM metrics WHERE category = $variant AND metric_name = 'sim_battery_soc_kwh' AND $__timeFilter(\"timestamp\") ORDER BY \"timestamp\" ASC;",
           "refId": "A"
         },
         {
@@ -585,7 +585,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \"timestamp\" AS time, value AS \"Moc (W)\" FROM metrics WHERE category = '' AND metric_name = 'sim_battery_power_w' AND $__timeFilter(\"timestamp\") ORDER BY \"timestamp\" ASC;",
+          "rawSql": "SELECT \"timestamp\" AS time, value AS \"Moc (W)\" FROM metrics WHERE category = $variant AND metric_name = 'sim_battery_power_w' AND $__timeFilter(\"timestamp\") ORDER BY \"timestamp\" ASC;",
           "refId": "B"
         }
       ],
@@ -682,7 +682,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \"timestamp\" AS time, value AS \"10 kWh / 5 kW (Standard)\" FROM metrics WHERE category = 'simulation_10kwh_5kw' AND metric_name = 'sim_savings_pln' AND (\"timestamp\") ORDER BY \"timestamp\" ASC;",
+          "rawSql": "SELECT \"timestamp\" AS time, value AS \"10 kWh / 5 kW (Standard)\" FROM metrics WHERE category = 'simulation_10kwh_5kw' AND metric_name = 'sim_savings_pln' AND $__timeFilter(\"timestamp\") ORDER BY \"timestamp\" ASC;",
           "refId": "A"
         },
         {
@@ -693,7 +693,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \"timestamp\" AS time, value AS \"10 kWh / 10 kW\" FROM metrics WHERE category = 'simulation_10kwh_10kw' AND metric_name = 'sim_savings_pln' AND (\"timestamp\") ORDER BY \"timestamp\" ASC;",
+          "rawSql": "SELECT \"timestamp\" AS time, value AS \"10 kWh / 10 kW\" FROM metrics WHERE category = 'simulation_10kwh_10kw' AND metric_name = 'sim_savings_pln' AND $__timeFilter(\"timestamp\") ORDER BY \"timestamp\" ASC;",
           "refId": "B"
         },
         {
@@ -704,7 +704,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \"timestamp\" AS time, value AS \"5 kWh / 5 kW\" FROM metrics WHERE category = 'simulation_5kwh_5kw' AND metric_name = 'sim_savings_pln' AND (\"timestamp\") ORDER BY \"timestamp\" ASC;",
+          "rawSql": "SELECT \"timestamp\" AS time, value AS \"5 kWh / 5 kW\" FROM metrics WHERE category = 'simulation_5kwh_5kw' AND metric_name = 'sim_savings_pln' AND $__timeFilter(\"timestamp\") ORDER BY \"timestamp\" ASC;",
           "refId": "C"
         },
         {
@@ -715,7 +715,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \"timestamp\" AS time, value AS \"5 kWh / 10 kW\" FROM metrics WHERE category = 'simulation_5kwh_10kw' AND metric_name = 'sim_savings_pln' AND (\"timestamp\") ORDER BY \"timestamp\" ASC;",
+          "rawSql": "SELECT \"timestamp\" AS time, value AS \"5 kWh / 10 kW\" FROM metrics WHERE category = 'simulation_5kwh_10kw' AND metric_name = 'sim_savings_pln' AND $__timeFilter(\"timestamp\") ORDER BY \"timestamp\" ASC;",
           "refId": "D"
         }
       ],

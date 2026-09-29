@@ -139,7 +139,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \"timestamp\" AS time, value AS \"Temperatura\" FROM metrics WHERE category = '$room' AND metric_name = 'temp' AND $__timeFilter(\"timestamp\") ORDER BY \"timestamp\" ASC",
+          "rawSql": "SELECT \"timestamp\" AS time, value AS \"Temperatura\" FROM metrics WHERE category = $room AND metric_name = 'temp' AND $__timeFilter(\"timestamp\") ORDER BY \"timestamp\" ASC",
           "refId": "A"
         }
       ],
@@ -253,7 +253,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \"timestamp\" AS time, value AS \"Wilgotność\" FROM metrics WHERE category = '$room' AND metric_name = 'humidity' AND $__timeFilter(\"timestamp\") ORDER BY \"timestamp\" ASC",
+          "rawSql": "SELECT \"timestamp\" AS time, value AS \"Wilgotność\" FROM metrics WHERE category = $room AND metric_name = 'humidity' AND $__timeFilter(\"timestamp\") ORDER BY \"timestamp\" ASC",
           "refId": "A"
         }
       ],
